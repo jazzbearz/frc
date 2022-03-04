@@ -1,0 +1,13 @@
+/target
+/release
+/coverage
+/.vscode
+/.history
+/.idea
+/tmp
+/fsrocks/tmp
+
+# terraform internal
+**/.terraform/*
+
+**/*.pyc

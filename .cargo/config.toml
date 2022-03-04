@@ -1,0 +1,11 @@
+[target.x86_64-pc-windows-gnu]
+rustflags = ["-Clto"]
+
+[target.x86_64-pc-windows-msvc]
+#rustflags = ["-Clto", "-Cembed-bitcode"]
+
+[target.x86_64-apple-darwin]
+rustflags = ["-Clinker-plugin-lto"]
+
+[x86_64-unknown-linux-gnu]
+rustflags = ["-Clto"]
