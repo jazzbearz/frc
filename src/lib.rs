@@ -4,14 +4,34 @@ extern "C" {
     pub fn get_thread_number() -> *mut u32;
     pub fn initialize_thread_number();
     pub fn uninitialize_thread_number();
-    pub fn store_local_pointer(ptr: *mut c_void);
-    pub fn get_local_pointer() -> *mut c_void;
+    pub fn store_local_pointer_0(ptr: *mut c_void);
+    pub fn store_local_pointer_1(ptr: *mut c_void);
+    pub fn store_local_pointer_2(ptr: *mut c_void);
+    pub fn store_local_pointer_3(ptr: *mut c_void);
+    pub fn store_local_pointer_4(ptr: *mut c_void);
+    pub fn store_local_pointer_5(ptr: *mut c_void);
+    pub fn store_local_pointer_6(ptr: *mut c_void);
+    pub fn store_local_pointer_7(ptr: *mut c_void);
+    pub fn store_local_pointer_8(ptr: *mut c_void);
+    pub fn store_local_pointer_9(ptr: *mut c_void);
+    pub fn get_local_pointer_0() -> *mut c_void;
+    pub fn get_local_pointer_1() -> *mut c_void;
+    pub fn get_local_pointer_2() -> *mut c_void;
+    pub fn get_local_pointer_3() -> *mut c_void;
+    pub fn get_local_pointer_4() -> *mut c_void;
+    pub fn get_local_pointer_5() -> *mut c_void;
+    pub fn get_local_pointer_6() -> *mut c_void;
+    pub fn get_local_pointer_7() -> *mut c_void;
+    pub fn get_local_pointer_8() -> *mut c_void;
+    pub fn get_local_pointer_9() -> *mut c_void;
 }
 
 mod imp;
 mod inner;
+mod singleton;
 
 pub use imp::Frc;
+pub use singleton::Singleton;
 
 #[cfg(test)]
 mod bench {
@@ -133,13 +153,14 @@ mod tests {
     };
 
     use crate::{
-        get_local_pointer, get_thread_number, initialize_thread_number, store_local_pointer,
+        get_local_pointer_0, get_thread_number, initialize_thread_number, store_local_pointer_0,
         uninitialize_thread_number,
     };
 
     #[test]
     fn run_test() {
         thread_counter_test();
+        singleton_test();
         tokio_test();
     }
 
@@ -154,11 +175,11 @@ mod tests {
                 let lset_o = std::boxed::Box::new(tokio::task::LocalSet::new());
                 let lset_raw: *const tokio::task::LocalSet = std::boxed::Box::into_raw(lset_o);
                 let lset_ptr = std::ptr::NonNull::new_unchecked(lset_raw as *mut _).as_ptr();
-                store_local_pointer(lset_ptr);
+                store_local_pointer_0(lset_ptr);
                 initialize_thread_number();
             })
             .on_thread_stop(|| unsafe {
-                let lset = get_local_pointer() as *mut tokio::task::LocalSet;
+                let lset = get_local_pointer_0() as *mut tokio::task::LocalSet;
                 lset.drop_in_place();
                 uninitialize_thread_number();
             })
@@ -205,6 +226,59 @@ mod tests {
             if totals != WORKER_CNT as u32 * 100 {
                 panic!("SIZE NOT MATCH expected {}:{}", totals, WORKER_CNT * 100);
             }
+        }
+    }
+
+    static SINGLETON_TEST: crate::Singleton<u32> = crate::Singleton::default_const();
+
+    fn singleton_test() {
+        unsafe {
+            crate::initialize_thread_number();
+
+            SINGLETON_TEST.replace(0);
+
+            let counter_set = crate::Frc::new(std::sync::Mutex::new(BTreeSet::<u32>::new()));
+            // println!("thread main no: {}", *tno);
+            // {
+            //     counter_set.lock().unwrap().insert(*tno);
+            // }
+
+            let counter_set_1 = counter_set.clone();
+            let counter_set_2 = counter_set.clone();
+
+            let handler = std::thread::spawn(move || {
+                crate::initialize_thread_number();
+                if let Some(p) = SINGLETON_TEST.replace(1) {
+                    println!("{}", *p);
+                    counter_set_1.lock().unwrap().insert(*p);
+                }
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                crate::uninitialize_thread_number();
+            });
+            let handler2 = std::thread::spawn(move || {
+                crate::initialize_thread_number();
+                if let Some(p) = SINGLETON_TEST.replace(2) {
+                    println!("{}", *p);
+                    counter_set_2.lock().unwrap().insert(*p);
+                }
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                crate::uninitialize_thread_number();
+            });
+            handler.join().unwrap();
+            handler2.join().unwrap();
+
+            let p = SINGLETON_TEST.get();
+            {
+                println!("{}", *p);
+                if let Ok(mut l) = counter_set.lock() {
+                    l.insert(*p);
+                    if l.len() != 3 {
+                        panic!("SIZE NOT MATCH expected {}:{}", 3, l.len());
+                    }
+                }
+            }
+
+            crate::uninitialize_thread_number();
         }
     }
 

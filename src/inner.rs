@@ -24,23 +24,24 @@ impl<T> Inner<T> {
 }
 
 impl<T: ?Sized> Inner<T> {
-    pub fn add_weight(&self, weight: usize) -> Option<usize> {
+    #[inline]
+    pub fn add_weight(&self, weight: usize) {
+        self.weight
+            .fetch_add(weight, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    #[inline]
+    pub fn drop_weight(&self, weight: usize) -> usize {
         let fetched = self
             .weight
-            .fetch_add(weight, std::sync::atomic::Ordering::Relaxed);
-        Some(fetched + weight)
-    }
-
-    pub fn drop_weight(&self, weight: usize) -> Option<usize> {
-        let _fetched = self
-            .weight
             .fetch_sub(weight, std::sync::atomic::Ordering::Relaxed);
-        Some(weight)
+        fetched - weight
     }
 
-    // pub fn get_weight(&self) -> usize {
-    //     self.weight.load(std::sync::atomic::Ordering::Relaxed)
-    // }
+    #[inline]
+    pub fn get_weight(&self, order: std::sync::atomic::Ordering) -> usize {
+        self.weight.load(order)
+    }
 }
 
 unsafe impl<T: ?Sized + Send> Send for Inner<T> {}

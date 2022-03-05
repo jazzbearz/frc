@@ -9,13 +9,13 @@ use std::{
     ptr::NonNull,
 };
 
-const DEFAULT_WEIGHT: usize = 1 << 16;
+pub const DEFAULT_WEIGHT: usize = 1 << 16;
 const DEFAULT_ADD_WEIGHT: usize = DEFAULT_WEIGHT << 1;
 
 pub struct Frc<T: ?Sized> {
-    weight: Cell<usize>,
-    ptr: NonNull<Inner<T>>,
-    thread_no: u32,
+    pub(crate) weight: Cell<usize>,
+    pub(crate) ptr: NonNull<Inner<T>>,
+    pub(crate) thread_no: u32,
 }
 
 impl<T> Frc<T> {
@@ -79,11 +79,7 @@ impl<T: ?Sized> Drop for Frc<T> {
     fn drop(&mut self) {
         let ptr = unsafe { self.ptr.as_ref() };
         let existing_weight = self.weight.get();
-        if ptr
-            .drop_weight(existing_weight)
-            .unwrap_or_else(|| panic!("Unable to drop {:?} from to Frc", existing_weight))
-            > 0
-        {
+        if ptr.drop_weight(existing_weight) > 0 {
             return;
         }
 
