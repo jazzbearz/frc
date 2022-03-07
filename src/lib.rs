@@ -4,26 +4,8 @@ extern "C" {
     pub fn get_thread_number() -> *mut u32;
     pub fn initialize_thread_number();
     pub fn uninitialize_thread_number();
-    pub fn store_local_pointer_0(ptr: *mut c_void);
-    pub fn store_local_pointer_1(ptr: *mut c_void);
-    pub fn store_local_pointer_2(ptr: *mut c_void);
-    pub fn store_local_pointer_3(ptr: *mut c_void);
-    pub fn store_local_pointer_4(ptr: *mut c_void);
-    pub fn store_local_pointer_5(ptr: *mut c_void);
-    pub fn store_local_pointer_6(ptr: *mut c_void);
-    pub fn store_local_pointer_7(ptr: *mut c_void);
-    pub fn store_local_pointer_8(ptr: *mut c_void);
-    pub fn store_local_pointer_9(ptr: *mut c_void);
-    pub fn get_local_pointer_0() -> *mut c_void;
-    pub fn get_local_pointer_1() -> *mut c_void;
-    pub fn get_local_pointer_2() -> *mut c_void;
-    pub fn get_local_pointer_3() -> *mut c_void;
-    pub fn get_local_pointer_4() -> *mut c_void;
-    pub fn get_local_pointer_5() -> *mut c_void;
-    pub fn get_local_pointer_6() -> *mut c_void;
-    pub fn get_local_pointer_7() -> *mut c_void;
-    pub fn get_local_pointer_8() -> *mut c_void;
-    pub fn get_local_pointer_9() -> *mut c_void;
+    pub fn store_local_pointer(pos: i32, ptr: *mut c_void);
+    pub fn get_local_pointer(pos: i32) -> *mut c_void;
 }
 
 mod imp;
@@ -32,7 +14,6 @@ mod singleton;
 
 pub use imp::Frc;
 pub use singleton::Singleton;
-
 #[cfg(test)]
 mod bench {
     struct RandGen {}
@@ -153,7 +134,7 @@ mod tests {
     };
 
     use crate::{
-        get_local_pointer_0, get_thread_number, initialize_thread_number, store_local_pointer_0,
+        get_local_pointer, get_thread_number, initialize_thread_number, store_local_pointer,
         uninitialize_thread_number,
     };
 
@@ -175,11 +156,11 @@ mod tests {
                 let lset_o = std::boxed::Box::new(tokio::task::LocalSet::new());
                 let lset_raw: *const tokio::task::LocalSet = std::boxed::Box::into_raw(lset_o);
                 let lset_ptr = std::ptr::NonNull::new_unchecked(lset_raw as *mut _).as_ptr();
-                store_local_pointer_0(lset_ptr);
+                store_local_pointer(0, lset_ptr);
                 initialize_thread_number();
             })
             .on_thread_stop(|| unsafe {
-                let lset = get_local_pointer_0() as *mut tokio::task::LocalSet;
+                let lset = get_local_pointer(0) as *mut tokio::task::LocalSet;
                 lset.drop_in_place();
                 uninitialize_thread_number();
             })
