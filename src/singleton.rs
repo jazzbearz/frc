@@ -52,7 +52,7 @@ impl<T> Singleton<T> {
             thread_no,
         }
     }
-    pub const fn default_const() -> Self {
+    pub const fn default() -> Self {
         Singleton {
             ptr: AtomicPtr::new(std::ptr::null_mut()),
         }
@@ -67,14 +67,6 @@ impl<T: Sized> Drop for Singleton<T> {
             if data.drop_weight(1) == 0 && data.get_weight(atomic::Ordering::Acquire) == 0 {
                 drop(data);
             }
-        }
-    }
-}
-
-impl<T: Sized> Default for Singleton<T> {
-    fn default() -> Self {
-        Singleton {
-            ptr: AtomicPtr::default(),
         }
     }
 }

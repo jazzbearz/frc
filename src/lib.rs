@@ -210,14 +210,13 @@ mod tests {
         }
     }
 
-    static SINGLETON_TEST: crate::Singleton<u32> = crate::Singleton::default_const();
+    static SINGLETON_TEST: crate::Singleton<u32> = crate::Singleton::default();
 
     fn singleton_test() {
         unsafe {
             crate::initialize_thread_number();
 
-            SINGLETON_TEST.replace(0);
-
+            println!("Setting the counter");
             let counter_set = crate::Frc::new(std::sync::Mutex::new(BTreeSet::<u32>::new()));
             // println!("thread main no: {}", *tno);
             // {
@@ -230,8 +229,10 @@ mod tests {
             let handler = std::thread::spawn(move || {
                 crate::initialize_thread_number();
                 if let Some(p) = SINGLETON_TEST.replace(1) {
-                    println!("{}", *p);
+                    println!("p0: {}", *p);
                     counter_set_1.lock().unwrap().insert(*p);
+                } else {
+                    println!("p0: None");
                 }
                 std::thread::sleep(std::time::Duration::from_millis(100));
                 crate::uninitialize_thread_number();
@@ -239,7 +240,7 @@ mod tests {
             let handler2 = std::thread::spawn(move || {
                 crate::initialize_thread_number();
                 if let Some(p) = SINGLETON_TEST.replace(2) {
-                    println!("{}", *p);
+                    println!("p1: {}", *p);
                     counter_set_2.lock().unwrap().insert(*p);
                 }
                 std::thread::sleep(std::time::Duration::from_millis(100));
@@ -250,11 +251,11 @@ mod tests {
 
             let p = SINGLETON_TEST.get();
             {
-                println!("{}", *p);
+                println!("p: {}", *p);
                 if let Ok(mut l) = counter_set.lock() {
                     l.insert(*p);
-                    if l.len() != 3 {
-                        panic!("SIZE NOT MATCH expected {}:{}", 3, l.len());
+                    if l.len() != 2 {
+                        panic!("SIZE NOT MATCH expected {}:{}", 2, l.len());
                     }
                 }
             }

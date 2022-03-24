@@ -76,6 +76,7 @@ dependencies = [
  "cc",
  "glob",
  "libc",
+ "log",
  "tokio",
 ]
 
