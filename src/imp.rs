@@ -177,3 +177,9 @@ impl<T: Hash> Hash for Frc<T> {
         self.inner().hash(state)
     }
 }
+
+impl<T> AsRef<T> for Frc<T> {
+    fn as_ref(&self) -> &T {
+        &self.inner().data
+    }
+}

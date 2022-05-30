@@ -10,7 +10,7 @@ use std::{
 // meaning that mutations of the weight are thread-safe.
 pub struct Inner<T: ?Sized> {
     weight: atomic::AtomicUsize,
-    data: T,
+    pub(crate) data: T,
 }
 
 impl<T> Inner<T> {
