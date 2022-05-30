@@ -164,6 +164,7 @@ impl<T: Ord> Ord for Frc<T> {
 
 impl<T: Eq> Eq for Frc<T> {}
 
+// Default Impl
 impl<T: Default> Default for Frc<T> {
     #[inline]
     fn default() -> Frc<T> {
@@ -171,6 +172,7 @@ impl<T: Default> Default for Frc<T> {
     }
 }
 
+// Hash Impl
 impl<T: Hash> Hash for Frc<T> {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -178,8 +180,28 @@ impl<T: Hash> Hash for Frc<T> {
     }
 }
 
+// AsRef Impl
 impl<T> AsRef<T> for Frc<T> {
     fn as_ref(&self) -> &T {
         &self.inner().data
+    }
+}
+
+// Serde Implementation
+impl<T: serde::Serialize> serde::Serialize for Frc<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.as_ref().serialize(serializer)
+    }
+}
+
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Frc<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        Ok(Frc::new(T::deserialize(deserializer)?))
     }
 }

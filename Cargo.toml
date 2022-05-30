@@ -10,6 +10,7 @@ lto = true
 [dependencies]
 libc = "0.2"
 log = "0.4"
+serde = "1"
 
 [build-dependencies]
 bindgen = {version = "0.59", default-features = false, features = ["runtime"]}
